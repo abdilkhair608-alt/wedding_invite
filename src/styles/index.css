@@ -47,7 +47,7 @@ img {
   z-index: 100;
   overflow: hidden;
   pointer-events: none;
-  animation: wedding-curtain-finish 0.2s ease 3s both;
+  animation: wedding-curtain-finish 2.6s linear both;
 }
 .opening-curtain-fabric {
   position: absolute;
@@ -70,7 +70,7 @@ img {
   gap: 20px;
   color: #f3ead3;
   text-align: center;
-  animation: wedding-seal-out 0.55s ease-in 0.45s both;
+  animation: wedding-seal-out 0.4s ease-out both;
 }
 .opening-curtain-seal > span {
   font-size: 14px;
@@ -85,10 +85,11 @@ img {
   color: #d1bb85;
 }
 @keyframes wedding-curtain-finish {
-  from {
+  0%,
+  90% {
     opacity: 1;
   }
-  to {
+  100% {
     opacity: 0;
   }
 }

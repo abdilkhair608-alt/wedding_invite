@@ -16,7 +16,7 @@ export default function OpeningCurtain() {
     const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
     const finish = () => setVisible(false);
     // Also remove the decorative overlay if animation events are unavailable.
-    const timer = window.setTimeout(finish, motion.matches ? 0 : 3500);
+    const timer = window.setTimeout(finish, motion.matches ? 0 : 3000);
     const handleMotionChange = (event) => {
       if (event.matches) finish();
     };
@@ -53,11 +53,11 @@ export default function OpeningCurtain() {
             <animate
               attributeName="d"
               values={curtainShapes}
-              begin="0.55s"
+              begin="0s"
               dur="2.4s"
               keyTimes="0;0.35;0.7;1"
               calcMode="spline"
-              keySplines="0.45 0 0.25 1;0.4 0 0.3 1;0.4 0 0.3 1"
+              keySplines="0.25 0.1 0.5 0.6;0.3 0.3 0.7 0.7;0.3 0.4 0.6 1"
               fill="freeze"
             />
           </path>
