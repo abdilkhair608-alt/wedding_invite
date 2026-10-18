@@ -1,42 +1,69 @@
-import { useEffect, useId, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { reception } from '../data/wedding.js';
-
-const curtainShapes = [
-  'M -20 -20 H 501 C 501 280 501 720 501 1020 H -20 Z',
-  'M -20 -20 H 492 C 492 280 240 720 90 1020 H -20 Z',
-  'M -20 -20 H 410 C 350 250 -100 600 -160 1020 H -20 Z',
-  'M -20 -20 H -40 C -100 250 -180 600 -200 1020 H -20 Z',
-].join(';');
+import { curtainPath } from '../utils/curtain.js';
 
 export default function OpeningCurtain() {
   const [visible, setVisible] = useState(true);
   const curtainId = useId();
+  const overlayRef = useRef(null);
+  const leftRef = useRef(null);
+  const rightRef = useRef(null);
 
   useEffect(() => {
+    if (!visible) return;
     const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const finish = () => setVisible(false);
-    // Also remove the decorative overlay if animation events are unavailable.
+    const startedAt = performance.now();
+    let frame;
+    let finished = false;
+    const finish = () => {
+      if (finished) return;
+      finished = true;
+      cancelAnimationFrame(frame);
+      setVisible(false);
+    };
+    const draw = (now) => {
+      if (finished) return;
+      const elapsed = now - startedAt;
+      const path = curtainPath(elapsed / 2400);
+      leftRef.current?.setAttribute('d', path);
+      rightRef.current?.setAttribute('d', path);
+      if (overlayRef.current) {
+        overlayRef.current.style.opacity = String(
+          Math.max(0, 1 - Math.max(0, elapsed - 2400) / 200),
+        );
+      }
+      if (elapsed >= 2600) finish();
+      else frame = requestAnimationFrame(draw);
+    };
+    // A wall-clock deadline also removes the overlay if rendering is suspended.
     const timer = window.setTimeout(finish, motion.matches ? 0 : 3000);
+    if (!motion.matches) frame = requestAnimationFrame(draw);
     const handleMotionChange = (event) => {
       if (event.matches) finish();
     };
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') finish();
+    };
+    const handlePageShow = (event) => {
+      if (event.persisted) finish();
+    };
     motion.addEventListener('change', handleMotionChange);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('pageshow', handlePageShow);
     return () => {
+      finished = true;
+      cancelAnimationFrame(frame);
       window.clearTimeout(timer);
       motion.removeEventListener('change', handleMotionChange);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('pageshow', handlePageShow);
     };
-  }, []);
+  }, [visible]);
 
   if (!visible) return null;
 
   return (
-    <div
-      className="opening-curtain"
-      aria-hidden="true"
-      onAnimationEnd={(event) => {
-        if (event.animationName === 'wedding-curtain-finish') setVisible(false);
-      }}
-    >
+    <div ref={overlayRef} className="opening-curtain" aria-hidden="true">
       <svg className="opening-curtain-fabric" viewBox="0 0 1000 1000" preserveAspectRatio="none">
         <defs>
           <linearGradient id={`${curtainId}-silk`}>
@@ -49,22 +76,10 @@ export default function OpeningCurtain() {
           <pattern id={`${curtainId}-folds`} width="50" height="1000" patternUnits="userSpaceOnUse">
             <rect width="50" height="1000" fill={`url(#${curtainId}-silk)`} />
           </pattern>
-          <path id={`${curtainId}-shape`} d={curtainShapes.split(';')[0]}>
-            <animate
-              attributeName="d"
-              values={curtainShapes}
-              begin="0s"
-              dur="2.4s"
-              keyTimes="0;0.35;0.7;1"
-              calcMode="spline"
-              keySplines="0.25 0.1 0.5 0.6;0.3 0.3 0.7 0.7;0.3 0.4 0.6 1"
-              fill="freeze"
-            />
-          </path>
         </defs>
         <g className="opening-curtain-drape" fill={`url(#${curtainId}-folds)`}>
-          <use href={`#${curtainId}-shape`} />
-          <use href={`#${curtainId}-shape`} transform="translate(1000 0) scale(-1 1)" />
+          <path ref={leftRef} d={curtainPath(0)} />
+          <path ref={rightRef} d={curtainPath(0)} transform="translate(1000 0) scale(-1 1)" />
         </g>
       </svg>
       <div className="opening-curtain-seal">
