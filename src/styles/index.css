@@ -746,6 +746,10 @@ h2 em {
 .rsvp-actions .button[aria-pressed='true'] {
   box-shadow: 0 0 0 3px #c7d2b5;
 }
+.rsvp-actions .button[aria-pressed='true'] .icon {
+  color: #ff6b6b;
+  fill: currentColor;
+}
 .rsvp-actions .button:disabled {
   cursor: default;
   transform: none;

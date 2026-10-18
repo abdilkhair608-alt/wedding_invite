@@ -3,6 +3,7 @@ import Icon from './Icon.jsx';
 
 export default function Rsvp() {
   const { data, loading, saving, error, refresh, respond } = useRsvp();
+  const confirmed = data?.attendance === 'attending';
 
   return (
     <section id="rsvp" className="rsvp-section section-space">
@@ -22,17 +23,18 @@ export default function Rsvp() {
           <button
             type="button"
             className="button button-dark"
-            aria-pressed={data?.attendance === 'attending'}
-            disabled={loading || !data || saving || data.attendance === 'attending'}
+            aria-pressed={confirmed}
+            disabled={loading || !data || saving || confirmed}
             onClick={() => respond('attending')}
           >
-            <Icon name="heart" /> Saya akan hadir
+            <Icon name="heart" />
+            {confirmed ? 'Sudah dikonfirmasi' : saving ? 'Menyimpan…' : 'Saya akan hadir'}
           </button>
         </div>
         <div className="rsvp-status" aria-live="polite">
           {saving ? (
             <p>Menyimpan konfirmasi…</p>
-          ) : data?.attendance === 'attending' ? (
+          ) : confirmed ? (
             <p>
               Terima kasih. Konfirmasi <strong>hadir</strong> Anda sudah tersimpan.
             </p>
