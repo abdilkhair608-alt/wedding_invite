@@ -56,10 +56,6 @@ export default function Rsvp() {
             <dd>{data ? data.counts.attending.toLocaleString('id-ID') : '—'}</dd>
           </div>
         </dl>
-        <p className="rsvp-note">
-          Satu browser dihitung sebagai satu konfirmasi. Gunakan browser yang sama agar konfirmasi
-          Anda tetap dikenali.
-        </p>
       </div>
     </section>
   );
