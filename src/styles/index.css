@@ -47,26 +47,18 @@ img {
   z-index: 100;
   overflow: hidden;
   pointer-events: none;
+  animation: wedding-curtain-finish 0.2s ease 3s both;
 }
-.opening-curtain-panel {
+.opening-curtain-fabric {
   position: absolute;
-  inset-block: 0;
-  width: calc(50% + 1px);
-  background-color: #394b3b;
-  background-image:
-    repeating-linear-gradient(90deg, #17251630 0%, #ffffff08 4%, #17251625 8%),
-    linear-gradient(90deg, #2c3e30, #52664d 48%, #314533);
-  box-shadow: 0 0 40px #13241666;
+  inset: 0;
+  width: 100%;
+  height: 100%;
 }
-.opening-curtain-left {
-  left: 0;
-  border-right: 1px solid #d1bb8550;
-  animation: wedding-curtain-left 1.7s cubic-bezier(0.65, 0, 0.25, 1) 0.65s both;
-}
-.opening-curtain-right {
-  right: 0;
-  border-left: 1px solid #d1bb8550;
-  animation: wedding-curtain-right 1.7s cubic-bezier(0.65, 0, 0.25, 1) 0.65s both;
+.opening-curtain-drape {
+  stroke: #b9a579;
+  stroke-width: 1.5;
+  filter: drop-shadow(0 0 12px #152a1b66);
 }
 .opening-curtain-seal {
   position: absolute;
@@ -92,20 +84,12 @@ img {
 .opening-curtain-seal em {
   color: #d1bb85;
 }
-@keyframes wedding-curtain-left {
+@keyframes wedding-curtain-finish {
   from {
-    transform: translateX(0);
+    opacity: 1;
   }
   to {
-    transform: translateX(-102%);
-  }
-}
-@keyframes wedding-curtain-right {
-  from {
-    transform: translateX(0);
-  }
-  to {
-    transform: translateX(102%);
+    opacity: 0;
   }
 }
 @keyframes wedding-seal-out {
