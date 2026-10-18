@@ -3,7 +3,7 @@
 Website undangan pernikahan menggunakan React, Vite, dan Tailwind CSS 3.
 Desain botanical dengan warna ivory, sage, dan emas lembut, layout responsif,
 gambar lokal, hitung mundur resepsi, galeri yang dapat diperbesar, dan
-konfirmasi kehadiran dengan penyimpanan file JSON di server (tanpa database).
+konfirmasi kehadiran dengan penyimpanan file JSON (tanpa database).
 Tailwind diproses saat build, sehingga tidak lagi menggunakan CDN JavaScript.
 
 ## Menjalankan proyek
@@ -20,7 +20,18 @@ bukan dengan membuka HTML langsung atau Live Server. Pada PowerShell yang
 memblokir npm.ps1, gunakan npm.cmd sebagai pengganti npm.
 API RSVP sudah berjalan bersama Vite; tidak perlu menyalakan server kedua.
 
-## Build produksi
+## Deploy di Vercel
+
+Ikuti [panduan setup Vercel RSVP](docs/vercel-rsvp.md): hubungkan **Private
+Vercel Blob** ke project, lalu redeploy kode terbaru. Route `/api/rsvp` berjalan
+melalui Vercel Function dan menyimpan satu file privat per IP. Rahasia hash
+dibuat otomatis. Kredensial storage tetap berada di server; tidak memakai database.
+
+Tanpa koneksi Blob, halaman dapat tampil tetapi konfirmasi kehadiran belum
+tersedia. Deployment Vercel tidak menjalankan `npm start` atau memakai JSON
+lokal sebagai penyimpanan permanen.
+
+## Build produksi di server Node.js sendiri
 
 ```sh
 npm run build
@@ -32,7 +43,7 @@ http://127.0.0.1:3000. `npm run preview` juga mendukung API untuk pemeriksaan
 lokal, tetapi gunakan `npm start` untuk menjalankan server produksi.
 Gunakan npm ci untuk memasang versi dependency yang sama dari package-lock.json.
 
-## Konfirmasi kehadiran tanpa database
+## Konfirmasi kehadiran dengan file lokal (Node.js sendiri)
 
 - Tombol **Saya akan hadir** menyimpan satu konfirmasi
   per IP ke `.data/rsvp.json`. File dibuat otomatis saat server pertama dijalankan.
@@ -51,7 +62,7 @@ Gunakan npm ci untuk memasang versi dependency yang sama dari package-lock.json.
   saat startup, server mencoba salinan ini; jika keduanya rusak, server gagal
   dengan jelas dan tidak membuat angka nol pengganti.
 
-**Agar jumlah bertahan saat hosting:** jalankan satu proses Node.js dengan
+**Untuk metode file lokal:** jalankan satu proses Node.js dengan
 disk/volume permanen. Jangan menghapus folder `.data` saat deploy. Salinan
 cadangan di disk yang sama tidak melindungi dari disk hilang, jadi simpan juga
 backup eksternal. Jangan menjalankan beberapa replika/proses penulis pada file
@@ -123,6 +134,8 @@ tailwind.config.js         Font body dan pemindaian kelas
 postcss.config.js          Pemrosesan Tailwind dan Autoprefixer
 vite.config.js             Konfigurasi Vite
 server/
+  blob-rsvp-store.js        File JSON privat per IP pada Vercel Blob
+  vercel-rsvp.js            Adapter Function, konfigurasi, dan IP platform
   index.js                 Server produksi: dist dan API
   config.js                Lokasi penyimpanan dan proxy tepercaya
   rsvp-api.js              Validasi request dan pengenalan IP
@@ -130,6 +143,10 @@ server/
   vite-rsvp.js             Integrasi API untuk dev/preview
 tests/countdown.test.js    Pengujian countdown, zona waktu, dan peta
 tests/rsvp.test.js         Pengujian API, IP, persistensi, dan request bersamaan
+tests/vercel-rsvp.test.js  Pengujian Blob dan adapter Function dengan simulasi
+api/rsvp.js                Endpoint serverless Vercel
+vercel.json                Konfigurasi deploy Vercel
+docs/vercel-rsvp.md         Langkah aktivasi storage dan pemeriksaan deploy
 eslint.config.js           Aturan pemeriksaan JavaScript/React
 .prettierrc.json           Format kode bersama
 ```

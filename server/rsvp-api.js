@@ -35,7 +35,7 @@ export function getClientIp(request, trustedProxyIps = []) {
   return remote;
 }
 
-function sendJson(response, status, payload) {
+export function sendJson(response, status, payload) {
   response.writeHead(status, {
     'Content-Type': 'application/json; charset=utf-8',
     'Cache-Control': 'no-store',
@@ -45,44 +45,64 @@ function sendJson(response, status, payload) {
   response.end(JSON.stringify(payload));
 }
 
-async function readAttendance(request) {
+async function readAttendance(request, allowedAttendance) {
   if (request.headers['content-type']?.split(';')[0].trim() !== 'application/json') {
     throw new RequestError(415, 'Format pengiriman harus JSON.');
   }
   if (Number(request.headers['content-length']) > 1024)
     throw new RequestError(413, 'Data terlalu besar.');
-  let size = 0;
-  const chunks = [];
-  for await (const chunk of request) {
-    size += chunk.length;
-    if (size > 1024) throw new RequestError(413, 'Data terlalu besar.');
-    chunks.push(chunk);
-  }
   let body;
-  try {
-    body = JSON.parse(Buffer.concat(chunks).toString('utf8'));
-  } catch {
-    throw new RequestError(400, 'Data konfirmasi tidak valid.');
+  if (request.body !== undefined) {
+    // The Vercel Node runtime can parse JSON before invoking this handler.
+    if (typeof request.body === 'object' && !Buffer.isBuffer(request.body)) body = request.body;
+    else {
+      try {
+        body = JSON.parse(String(request.body));
+      } catch {
+        throw new RequestError(400, 'Data konfirmasi tidak valid.');
+      }
+    }
+    if (Buffer.byteLength(JSON.stringify(body) || '') > 1024)
+      throw new RequestError(413, 'Data terlalu besar.');
+  } else {
+    let size = 0;
+    const chunks = [];
+    for await (const chunk of request) {
+      size += chunk.length;
+      if (size > 1024) throw new RequestError(413, 'Data terlalu besar.');
+      chunks.push(chunk);
+    }
+    try {
+      body = JSON.parse(Buffer.concat(chunks).toString('utf8'));
+    } catch {
+      throw new RequestError(400, 'Data konfirmasi tidak valid.');
+    }
   }
-  if (!body || !['attending', 'declined'].includes(body.attendance)) {
-    throw new RequestError(400, 'Pilih hadir atau tidak hadir.');
+  if (!body || !allowedAttendance.includes(body.attendance)) {
+    throw new RequestError(400, 'Pilihan konfirmasi tidak valid.');
   }
   return body.attendance;
 }
 
-export function createRsvpHandler({ filePath, trustedProxyIps = [] }) {
+export function createRsvpHandler({
+  filePath,
+  trustedProxyIps = [],
+  store,
+  resolveIp,
+  allowedAttendance = ['attending', 'declined'],
+}) {
   const proxies = trustedProxyIps.map((ip) => {
     const normalized = normalizeIp(ip);
     if (!normalized) throw new Error(`IP proxy tidak valid: ${ip}`);
     return normalized;
   });
-  const store = createRsvpStore(filePath);
+  const storage = store ?? createRsvpStore(filePath);
 
   return async (request, response, next) => {
     if (request.url.split('?')[0] !== '/api/rsvp') return next();
     try {
-      const ip = getClientIp(request, proxies);
-      if (request.method === 'GET') return sendJson(response, 200, store.read(ip));
+      const ip = resolveIp ? resolveIp(request) : getClientIp(request, proxies);
+      if (request.method === 'GET') return sendJson(response, 200, await storage.read(ip));
       if (request.method !== 'POST') {
         response.setHeader('Allow', 'GET, POST');
         return sendJson(response, 405, { error: 'Metode tidak didukung.' });
@@ -100,8 +120,8 @@ export function createRsvpHandler({ filePath, trustedProxyIps = [] }) {
       if (request.headers['sec-fetch-site'] === 'cross-site') {
         throw new RequestError(403, 'Kirim konfirmasi melalui halaman undangan.');
       }
-      const attendance = await readAttendance(request);
-      return sendJson(response, 200, store.save(ip, attendance));
+      const attendance = await readAttendance(request, allowedAttendance);
+      return sendJson(response, 200, await storage.save(ip, attendance));
     } catch (error) {
       if (error instanceof RequestError)
         return sendJson(response, error.status, { error: error.message });

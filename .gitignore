@@ -5,6 +5,7 @@ dist/
 *.local
 .qa/
 .data/
+.vercel/
 .env
 .env.*
 !.env.example

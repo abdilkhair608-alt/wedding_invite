@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+class RsvpApiError extends Error {}
+
 async function requestSnapshot(signal, attendance) {
   const controller = new AbortController();
   const cancel = () => controller.abort();
   signal.addEventListener('abort', cancel, { once: true });
-  const timeout = setTimeout(cancel, 10000);
+  const timeout = setTimeout(cancel, 20000);
   try {
     const response = await fetch('/api/rsvp', {
       method: attendance ? 'POST' : 'GET',
@@ -13,8 +15,14 @@ async function requestSnapshot(signal, attendance) {
       cache: 'no-store',
       signal: controller.signal,
     });
-    const snapshot = await response.json();
-    if (!response.ok) throw new Error(snapshot.error || 'Konfirmasi belum dapat diproses.');
+    const snapshot = await response.json().catch(() => null);
+    if (!response.ok) {
+      throw new RsvpApiError(
+        typeof snapshot?.error === 'string'
+          ? snapshot.error
+          : 'Konfirmasi kehadiran belum tersedia. Silakan coba lagi nanti.',
+      );
+    }
     if (
       !Number.isSafeInteger(snapshot.counts?.attending) ||
       snapshot.counts.attending < 0 ||
@@ -49,9 +57,13 @@ export default function useRsvp() {
         setData(snapshot);
         setError('');
       }
-    } catch {
+    } catch (error) {
       if (!controller.signal.aborted && requestId === latestRequestRef.current) {
-        setError('Data kehadiran belum dapat dimuat. Periksa koneksi lalu coba lagi.');
+        setError(
+          error instanceof RsvpApiError
+            ? error.message
+            : 'Data kehadiran belum dapat dimuat. Periksa koneksi lalu coba lagi.',
+        );
       }
     } finally {
       if (!controller.signal.aborted && requestId === latestRequestRef.current) setLoading(false);
@@ -84,9 +96,13 @@ export default function useRsvp() {
     try {
       const snapshot = await requestSnapshot(controller.signal, attendance);
       if (!controller.signal.aborted) setData(snapshot);
-    } catch {
+    } catch (error) {
       if (!controller.signal.aborted) {
-        setError('Konfirmasi belum dapat dipastikan. Periksa koneksi lalu muat ulang.');
+        setError(
+          error instanceof RsvpApiError
+            ? error.message
+            : 'Konfirmasi belum dapat dipastikan. Periksa koneksi lalu muat ulang.',
+        );
       }
     } finally {
       savingRef.current = false;

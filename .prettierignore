@@ -4,3 +4,4 @@ dist/
 .npm-cache/
 package-lock.json
 .data/
+.vercel/
