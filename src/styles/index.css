@@ -3,6 +3,10 @@
 @tailwind utilities;
 
 :root {
+  --radius-card: 24px;
+  --radius-detail: 16px;
+  --radius-section: 36px;
+  --radius-pill: 999px;
   color: #343e34;
   background: #faf9f5;
   font-synthesis: none;
@@ -235,6 +239,7 @@ img {
   font-weight: 400;
   letter-spacing: 0.04em;
   border: 1px solid transparent;
+  border-radius: var(--radius-pill);
   transition:
     background 0.2s,
     transform 0.2s;
@@ -315,7 +320,7 @@ h2 em {
 .portrait-frame {
   max-width: 260px;
   aspect-ratio: 4 / 4.8;
-  border-radius: 150px 150px 0 0;
+  border-radius: 150px 150px var(--radius-card) var(--radius-card);
   position: relative;
   margin: 0 auto;
 }
@@ -324,7 +329,7 @@ h2 em {
   position: absolute;
   inset: -9px;
   border: 1px solid #c6cfb8;
-  border-radius: 160px 160px 0 0;
+  border-radius: 160px 160px calc(var(--radius-card) + 9px) calc(var(--radius-card) + 9px);
 }
 .portrait-frame img {
   width: 100%;
@@ -390,6 +395,7 @@ h2 em {
 .event-card {
   background: #fafbf5;
   border: 1px solid #d8dfcd;
+  border-radius: var(--radius-card);
   padding: 34px;
   display: flex;
   flex-direction: column;
@@ -493,6 +499,10 @@ h2 em {
   flex-direction: column;
   min-width: 60px;
   position: relative;
+  padding: 12px 8px;
+  border: 1px solid #d8dfcd;
+  border-radius: var(--radius-detail);
+  background: #fafbf5;
 }
 .countdown > div + div::before {
   content: ':';
@@ -545,6 +555,7 @@ h2 em {
   overflow: hidden;
   background: #e4e8db;
   text-align: left;
+  border-radius: var(--radius-card);
 }
 .gallery-wide {
   grid-row: span 2;
@@ -553,6 +564,7 @@ h2 em {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  border-radius: inherit;
   transition: transform 0.7s;
 }
 .gallery-photo:hover img {
@@ -593,15 +605,19 @@ h2 em {
   background: transparent;
   overflow: visible;
   color: white;
+  border-radius: var(--radius-card);
 }
 .lightbox::backdrop {
   background: #172112ed;
   backdrop-filter: blur(8px);
 }
 .lightbox > img {
-  width: 100%;
+  width: auto;
+  max-width: 100%;
   max-height: 80svh;
   object-fit: contain;
+  margin: 0 auto;
+  border-radius: var(--radius-card);
 }
 .lightbox > p {
   text-align: center;
@@ -625,6 +641,7 @@ h2 em {
   color: #dbe1cf;
   text-align: center;
   padding: 80px 32px 0;
+  border-radius: var(--radius-section) var(--radius-section) 0 0;
 }
 .site-footer .eyebrow {
   color: #b7c3a2;
@@ -697,6 +714,8 @@ h2 em {
   color: #fffdf5;
   background: #293a2a;
   text-align: center;
+  border-radius: 0 0 var(--radius-section) var(--radius-section);
+  overflow: hidden;
 }
 .hero-background {
   position: absolute;
@@ -865,8 +884,9 @@ h2 em {
   max-width: 460px;
   margin: 28px auto 0;
   padding: 24px 0;
-  border-top: 1px solid #d7dfca;
-  border-bottom: 1px solid #d7dfca;
+  border: 1px solid #d7dfca;
+  border-radius: var(--radius-card);
+  background: #f0f1e9;
 }
 .rsvp-counts > div {
   display: flex;
@@ -890,6 +910,8 @@ h2 em {
 }
 .rsvp-error button {
   min-height: 44px;
+  padding: 8px 16px;
+  border-radius: var(--radius-pill);
   text-decoration: underline;
   text-underline-offset: 4px;
 }
@@ -902,7 +924,7 @@ h2 em {
   max-height: calc(100dvh - 32px);
   padding: 0;
   border: 1px solid #ffffff30;
-  border-radius: 24px;
+  border-radius: var(--radius-card);
   background: #2c402bf5;
   color: #fffdf5;
   box-shadow: 0 24px 80px #07100666;
@@ -1023,6 +1045,7 @@ h2 em {
   min-height: 72px;
   padding: 12px 4px;
   border-top: 1px solid #ffffff20;
+  border-radius: var(--radius-detail);
   font-family: 'Cormorant Garamond', serif;
   font-size: 30px;
   line-height: 1.4;
@@ -1030,6 +1053,7 @@ h2 em {
 }
 .mobile-menu nav a:hover {
   color: #d6e2bd;
+  background: #ffffff0a;
 }
 .mobile-nav-index {
   font-family: 'DM Sans', sans-serif;
@@ -1041,6 +1065,10 @@ h2 em {
   outline-offset: 3px;
 }
 @media (max-width: 767px) {
+  :root {
+    --radius-card: 20px;
+    --radius-section: 28px;
+  }
   html {
     scroll-padding-top: 24px;
   }
@@ -1141,7 +1169,6 @@ h2 em {
   .event-card {
     min-width: 0;
     padding: 24px;
-    border-radius: 16px;
   }
   .event-topline {
     gap: 12px;
@@ -1219,7 +1246,6 @@ h2 em {
   }
   .gallery-photo {
     aspect-ratio: 4 / 3;
-    border-radius: 12px;
     min-width: 0;
   }
   .gallery-wide {
