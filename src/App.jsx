@@ -6,6 +6,7 @@ import Events from './components/Events.jsx';
 import Rsvp from './components/Rsvp.jsx';
 import Gallery from './components/Gallery.jsx';
 import Footer from './components/Footer.jsx';
+import OpeningCurtain from './components/OpeningCurtain.jsx';
 import useScrollReveal from './hooks/useScrollReveal.js';
 
 export default function App() {
@@ -13,6 +14,7 @@ export default function App() {
 
   return (
     <div ref={pageRef}>
+      <OpeningCurtain />
       <Navbar />
       <main>
         <Hero />
