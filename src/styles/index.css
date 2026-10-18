@@ -749,6 +749,24 @@ h2 em {
 .rsvp-actions .button[aria-pressed='true'] .icon {
   color: #ff6b6b;
   fill: currentColor;
+  transform-origin: center;
+  animation: rsvp-heartbeat 1.8s ease-in-out infinite;
+}
+@keyframes rsvp-heartbeat {
+  0%,
+  40%,
+  100% {
+    transform: scale(1);
+  }
+  12% {
+    transform: scale(1.22);
+  }
+  24% {
+    transform: scale(1);
+  }
+  32% {
+    transform: scale(1.14);
+  }
 }
 .rsvp-actions .button:disabled {
   cursor: default;
