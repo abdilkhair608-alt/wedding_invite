@@ -41,8 +41,8 @@ function readState(filePath) {
   return state;
 }
 
-function snapshot(state, ip) {
-  const key = createHmac('sha256', state.secret).update(ip).digest('hex');
+function snapshot(state, identity) {
+  const key = identity ? createHmac('sha256', state.secret).update(identity).digest('hex') : null;
   const counts = { attending: 0, declined: 0 };
   for (const response of Object.values(state.responses)) counts[response.attendance] += 1;
   return { counts, attendance: state.responses[key]?.attendance ?? null };
@@ -74,22 +74,22 @@ export function createRsvpStore(filePath) {
   }
 
   return {
-    read(ip) {
-      return snapshot(readState(filePath), ip);
+    read(identity = null) {
+      return snapshot(readState(filePath), identity);
     },
-    save(ip, attendance) {
+    save(identity, attendance) {
       if (!['attending', 'declined'].includes(attendance))
         throw new TypeError('Pilihan tidak valid.');
       // Synchronous writes serialize requests inside this single Node process.
       const state = readState(filePath);
-      const key = createHmac('sha256', state.secret).update(ip).digest('hex');
+      const key = createHmac('sha256', state.secret).update(identity).digest('hex');
       if (state.responses[key]?.attendance !== attendance) {
         state.responses[key] = { attendance, updatedAt: new Date().toISOString() };
         const content = JSON.stringify(state, null, 2);
         atomicWrite(filePath, content);
         atomicWrite(backupPath, content);
       }
-      return snapshot(state, ip);
+      return snapshot(state, identity);
     },
   };
 }

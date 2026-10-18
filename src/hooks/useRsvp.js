@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { getBrowserId } from '../utils/browser-id.js';
 
 class RsvpApiError extends Error {}
 
@@ -8,9 +9,18 @@ async function requestSnapshot(signal, attendance) {
   signal.addEventListener('abort', cancel, { once: true });
   const timeout = setTimeout(cancel, 20000);
   try {
+    let browserId;
+    try {
+      browserId = getBrowserId();
+    } catch (error) {
+      throw new RsvpApiError(error.message);
+    }
     const response = await fetch('/api/rsvp', {
       method: attendance ? 'POST' : 'GET',
-      headers: attendance ? { 'Content-Type': 'application/json' } : undefined,
+      headers: {
+        'X-Rsvp-Browser-Id': browserId,
+        ...(attendance ? { 'Content-Type': 'application/json' } : {}),
+      },
       body: attendance ? JSON.stringify({ attendance }) : undefined,
       cache: 'no-store',
       signal: controller.signal,
@@ -24,7 +34,7 @@ async function requestSnapshot(signal, attendance) {
       );
     }
     if (
-      !Number.isSafeInteger(snapshot.counts?.attending) ||
+      !Number.isSafeInteger(snapshot?.counts?.attending) ||
       snapshot.counts.attending < 0 ||
       !Number.isSafeInteger(snapshot.counts?.declined) ||
       snapshot.counts.declined < 0 ||

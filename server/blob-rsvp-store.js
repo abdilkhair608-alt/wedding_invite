@@ -72,9 +72,9 @@ export function createBlobRsvpStore({ prefix, token, storeId, client = { get, li
     return secretPromise;
   }
 
-  async function responseKey(ip) {
+  async function responseKey(identity) {
     return createHmac('sha256', await getSecret())
-      .update(ip)
+      .update(identity)
       .digest('hex');
   }
 
@@ -115,7 +115,7 @@ export function createBlobRsvpStore({ prefix, token, storeId, client = { get, li
 
   async function snapshot(key, confirmed = false) {
     const keys = await confirmedKeys();
-    if (confirmed || (!keys.has(key) && (await hasConfirmation(key)))) keys.add(key);
+    if (key && (confirmed || (!keys.has(key) && (await hasConfirmation(key))))) keys.add(key);
     return {
       counts: { attending: keys.size, declined: 0 },
       attendance: keys.has(key) ? 'attending' : null,
@@ -123,12 +123,12 @@ export function createBlobRsvpStore({ prefix, token, storeId, client = { get, li
   }
 
   return {
-    async read(ip) {
-      return snapshot(await responseKey(ip));
+    async read(identity = null) {
+      return snapshot(identity ? await responseKey(identity) : null);
     },
-    async save(ip, attendance) {
+    async save(identity, attendance) {
       if (attendance !== 'attending') throw new TypeError('Hanya konfirmasi hadir yang didukung.');
-      const key = await responseKey(ip);
+      const key = await responseKey(identity);
       if (!(await hasConfirmation(key))) {
         try {
           await createOnce(`${responsePrefix}${key}.json`, {

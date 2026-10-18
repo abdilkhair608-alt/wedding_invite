@@ -24,7 +24,7 @@ API RSVP sudah berjalan bersama Vite; tidak perlu menyalakan server kedua.
 
 Ikuti [panduan setup Vercel RSVP](docs/vercel-rsvp.md): hubungkan **Private
 Vercel Blob** ke project, lalu redeploy kode terbaru. Route `/api/rsvp` berjalan
-melalui Vercel Function dan menyimpan satu file privat per IP. Rahasia hash
+melalui Vercel Function dan menyimpan satu file privat per ID browser. Rahasia hash
 dibuat otomatis. Kredensial storage tetap berada di server; tidak memakai database.
 
 Tanpa koneksi Blob, halaman dapat tampil tetapi konfirmasi kehadiran belum
@@ -46,17 +46,22 @@ Gunakan npm ci untuk memasang versi dependency yang sama dari package-lock.json.
 ## Konfirmasi kehadiran dengan file lokal (Node.js sendiri)
 
 - Tombol **Saya akan hadir** menyimpan satu konfirmasi
-  per IP ke `.data/rsvp.json`. File dibuat otomatis saat server pertama dijalankan.
-- Klik berulang dari IP yang sama tidak menggandakan jumlah. Respons tetap ada
+  per ID browser ke `.data/rsvp.json`. File dibuat otomatis saat server pertama dijalankan.
+- Klik berulang dari browser yang sama tidak menggandakan jumlah. Respons tetap ada
   setelah refresh, menutup browser, atau restart server. Halaman hanya menampilkan
   tombol hadir dan jumlah konfirmasi hadir.
-- Pengunjung dengan IP berbeda menambah respons. IP bukan identitas orang:
-  beberapa orang di Wi-Fi/IP publik yang sama berbagi satu respons; IP yang
-  berubah dapat dihitung sebagai respons baru.
+- ID browser dibuat otomatis dengan generator acak kriptografis dan disimpan di
+  localStorage. HP dan laptop pada Wi-Fi sama dapat mengonfirmasi masing-masing.
+  Refresh, tab baru, atau perubahan IP tidak membuat konfirmasi baru.
+- ID berlaku per browser dan origin/domain. Menghapus data browser, mode privat,
+  mengganti browser, atau mengganti domain dapat menghasilkan ID baru dan hitungan
+  ganda. Gunakan satu domain Production yang tetap untuk semua tamu.
+- Jika penyimpanan browser diblokir, konfirmasi berhenti dengan pesan yang jelas;
+  tidak dibuat ID sementara yang berubah setiap request.
 - Jumlah diperbarui setelah menyimpan dan dimuat ulang setiap 30 detik selama
   tab terlihat. Angka tidak dinaikkan sebelum server mengonfirmasi penyimpanan.
-- IP disimpan sebagai hash HMAC, bukan alamat IP mentah. File dan kunci hash
-  tidak dikirim ke browser; API hanya mengirim jumlah dan pilihan IP peminta.
+- ID browser disimpan sebagai hash HMAC di server. File dan kunci hash
+  tidak dikirim ke browser; API hanya mengirim jumlah dan pilihan browser peminta.
 - Penulisan memakai file sementara, flush ke disk, lalu rename. Salinan
   `.data/rsvp.json.backup` diperbarui setelah penyimpanan. Jika file utama rusak
   saat startup, server mencoba salinan ini; jika keduanya rusak, server gagal
@@ -73,21 +78,9 @@ konfigurasi. `RSVP_FILE` dapat menunjuk path absolut pada volume permanen, misal
 `/var/lib/wedding/rsvp.json`. Simpan file di luar `dist`/`public`. `HOST` dan `PORT`
 mengatur alamat server; set `HOST=0.0.0.0` bila diperlukan oleh lingkungan hosting.
 
-Jika menggunakan reverse proxy, isi `TRUSTED_PROXY_IPS` dengan IP socket proxy
-yang benar (pisahkan koma). Proxy wajib mengisi/menambahkan IP koneksi asli
-ke bagian terakhir `X-Forwarded-For`. Contoh untuk Nginx di mesin yang sama:
-
-```nginx
-location / {
-    proxy_pass http://127.0.0.1:3000;
-    proxy_set_header Host $http_host;
-    proxy_set_header X-Forwarded-For $remote_addr;
-}
-```
-
-Gunakan `TRUSTED_PROXY_IPS=127.0.0.1,::1` untuk konfigurasi tersebut dan
-batasi port backend agar hanya dapat diakses proxy. Tanpa proxy, biarkan kosong:
-header IP dari browser diabaikan dan IP diambil dari koneksi server.
+Jumlah dari versi lama berbasis IP tetap dihitung. Respons IP lama tidak dapat
+langsung dipasangkan dengan ID browser baru; pengunjung lama dapat mengonfirmasi
+sekali lagi setelah pergantian metode. Tidak ada file/data lama yang dihapus.
 
 ## Memeriksa kode
 
@@ -127,6 +120,7 @@ src/
     wedding.js             Sumber tanggal, waktu, alamat, dan peta acara
   utils/
     countdown.js           Perhitungan hitung mundur
+    browser-id.js          ID acak persisten per browser
   styles/
     index.css              Tailwind, desain, dan breakpoint responsif
   assets/                  Gambar pernikahan lokal dan catatan sumber
@@ -134,15 +128,16 @@ tailwind.config.js         Font body dan pemindaian kelas
 postcss.config.js          Pemrosesan Tailwind dan Autoprefixer
 vite.config.js             Konfigurasi Vite
 server/
-  blob-rsvp-store.js        File JSON privat per IP pada Vercel Blob
-  vercel-rsvp.js            Adapter Function, konfigurasi, dan IP platform
+  blob-rsvp-store.js        File JSON privat per ID browser pada Vercel Blob
+  vercel-rsvp.js            Adapter Function, konfigurasi, Blob
   index.js                 Server produksi: dist dan API
-  config.js                Lokasi penyimpanan dan proxy tepercaya
-  rsvp-api.js              Validasi request dan pengenalan IP
+  config.js                Lokasi penyimpanan lokal
+  rsvp-api.js              Validasi request dan validasi ID browser
   rsvp-store.js            Penyimpanan JSON dan cadangan
   vite-rsvp.js             Integrasi API untuk dev/preview
+tests/browser-id.test.js   Persistensi ID dan penyimpanan browser diblokir
 tests/countdown.test.js    Pengujian countdown, zona waktu, dan peta
-tests/rsvp.test.js         Pengujian API, IP, persistensi, dan request bersamaan
+tests/rsvp.test.js         Pengujian API, ID browser, persistensi, dan request bersamaan
 tests/vercel-rsvp.test.js  Pengujian Blob dan adapter Function dengan simulasi
 api/rsvp.js                Endpoint serverless Vercel
 vercel.json                Konfigurasi deploy Vercel

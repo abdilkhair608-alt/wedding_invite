@@ -1,4 +1,3 @@
-import { isIP } from 'node:net';
 import { createRsvpStore } from './rsvp-store.js';
 
 class RequestError extends Error {
@@ -8,31 +7,16 @@ class RequestError extends Error {
   }
 }
 
-export function normalizeIp(value) {
-  if (typeof value !== 'string') return null;
-  const ip = value.trim().split('%')[0];
-  if (isIP(ip) === 4) return ip;
-  if (isIP(ip) !== 6) return null;
-  const canonical = new URL(`http://[${ip}]/`).hostname.slice(1, -1);
-  if (!canonical.startsWith('::ffff:')) return canonical;
-  const words = canonical
-    .slice(7)
-    .split(':')
-    .map((word) => parseInt(word, 16));
-  return [words[0] >> 8, words[0] & 255, words[1] >> 8, words[1] & 255].join('.');
-}
-
-export function getClientIp(request, trustedProxyIps = []) {
-  const remote = normalizeIp(request.socket.remoteAddress);
-  if (!remote) throw new RequestError(400, 'Alamat koneksi tidak dapat dikenali.');
-  const forwarded = request.headers['x-forwarded-for'];
-  if (trustedProxyIps.includes(remote) && typeof forwarded === 'string') {
-    // The nearest trusted proxy must append the real connecting IP to this header.
-    const client = normalizeIp(forwarded.split(',').at(-1));
-    if (!client) throw new RequestError(400, 'Alamat koneksi tidak valid.');
-    return client;
+function getBrowserIdentity(request) {
+  const id = request.headers['x-rsvp-browser-id'];
+  if (id === undefined && request.method !== 'POST') return null;
+  if (
+    typeof id !== 'string' ||
+    !/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/.test(id)
+  ) {
+    throw new RequestError(400, 'ID browser tidak valid. Muat ulang halaman undangan.');
   }
-  return remote;
+  return `browser:${id}`;
 }
 
 export function sendJson(response, status, payload) {
@@ -40,7 +24,7 @@ export function sendJson(response, status, payload) {
     'Content-Type': 'application/json; charset=utf-8',
     'Cache-Control': 'no-store',
     'X-Content-Type-Options': 'nosniff',
-    Vary: 'Origin',
+    Vary: 'Origin, X-Rsvp-Browser-Id',
   });
   response.end(JSON.stringify(payload));
 }
@@ -86,23 +70,16 @@ async function readAttendance(request, allowedAttendance) {
 
 export function createRsvpHandler({
   filePath,
-  trustedProxyIps = [],
   store,
-  resolveIp,
   allowedAttendance = ['attending', 'declined'],
 }) {
-  const proxies = trustedProxyIps.map((ip) => {
-    const normalized = normalizeIp(ip);
-    if (!normalized) throw new Error(`IP proxy tidak valid: ${ip}`);
-    return normalized;
-  });
   const storage = store ?? createRsvpStore(filePath);
 
   return async (request, response, next) => {
     if (request.url.split('?')[0] !== '/api/rsvp') return next();
     try {
-      const ip = resolveIp ? resolveIp(request) : getClientIp(request, proxies);
-      if (request.method === 'GET') return sendJson(response, 200, await storage.read(ip));
+      const identity = getBrowserIdentity(request);
+      if (request.method === 'GET') return sendJson(response, 200, await storage.read(identity));
       if (request.method !== 'POST') {
         response.setHeader('Allow', 'GET, POST');
         return sendJson(response, 405, { error: 'Metode tidak didukung.' });
@@ -121,7 +98,7 @@ export function createRsvpHandler({
         throw new RequestError(403, 'Kirim konfirmasi melalui halaman undangan.');
       }
       const attendance = await readAttendance(request, allowedAttendance);
-      return sendJson(response, 200, await storage.save(ip, attendance));
+      return sendJson(response, 200, await storage.save(identity, attendance));
     } catch (error) {
       if (error instanceof RequestError)
         return sendJson(response, error.status, { error: error.message });

@@ -1,13 +1,5 @@
 import { createBlobRsvpStore } from './blob-rsvp-store.js';
-import { createRsvpHandler, getClientIp, normalizeIp, sendJson } from './rsvp-api.js';
-
-export function getVercelClientIp(request, env) {
-  if (env.VERCEL !== '1') return getClientIp(request);
-  const header = request.headers['x-vercel-forwarded-for'] ?? request.headers['x-forwarded-for'];
-  const ip = typeof header === 'string' ? normalizeIp(header.split(',')[0]) : null;
-  if (!ip) throw new Error('Vercel tidak memberikan IP koneksi yang valid.');
-  return ip;
-}
+import { createRsvpHandler, sendJson } from './rsvp-api.js';
 
 export function createVercelRsvpHandler({ env = process.env, client } = {}) {
   let handler;
@@ -29,7 +21,6 @@ export function createVercelRsvpHandler({ env = process.env, client } = {}) {
         });
         handler = createRsvpHandler({
           store,
-          resolveIp: (req) => getVercelClientIp(req, env),
           allowedAttendance: ['attending'],
         });
       }

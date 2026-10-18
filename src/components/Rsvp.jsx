@@ -57,8 +57,8 @@ export default function Rsvp() {
           </div>
         </dl>
         <p className="rsvp-note">
-          Satu IP dihitung sebagai satu respons. Pengunjung di jaringan Wi-Fi yang sama dapat
-          berbagi satu respons.
+          Satu browser dihitung sebagai satu konfirmasi. Gunakan browser yang sama agar konfirmasi
+          Anda tetap dikenali.
         </p>
       </div>
     </section>

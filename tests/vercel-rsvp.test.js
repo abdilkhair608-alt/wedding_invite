@@ -3,7 +3,7 @@ import { once } from 'node:events';
 import { createServer } from 'node:http';
 import { test } from 'node:test';
 import { createBlobRsvpStore } from '../server/blob-rsvp-store.js';
-import { createVercelRsvpHandler, getVercelClientIp } from '../server/vercel-rsvp.js';
+import { createVercelRsvpHandler } from '../server/vercel-rsvp.js';
 
 function fakeBlob() {
   const files = new Map();
@@ -133,16 +133,6 @@ test('missing or damaged config fails without regenerating IP keys for existing 
   await assert.rejects(store(blob).read('203.0.113.1'), /Data tidak direset/);
 });
 
-test('Vercel IP lookup uses platform headers and ignores them outside Vercel', () => {
-  const request = {
-    socket: { remoteAddress: '127.0.0.1' },
-    headers: { 'x-vercel-forwarded-for': '203.0.113.10', 'x-forwarded-for': '198.51.100.9' },
-  };
-  assert.equal(getVercelClientIp(request, { VERCEL: '1' }), '203.0.113.10');
-  assert.equal(getVercelClientIp(request, {}), '127.0.0.1');
-  assert.throws(() => getVercelClientIp({ headers: {} }, { VERCEL: '1' }), /IP koneksi/);
-});
-
 test('Vercel adapter awaits Blob writes and supports bodies pre-parsed by the runtime', async (t) => {
   const blob = fakeBlob();
   const handler = createVercelRsvpHandler({
@@ -161,7 +151,11 @@ test('Vercel adapter awaits Blob writes and supports bodies pre-parsed by the ru
   await once(server, 'listening');
   t.after(() => new Promise((resolve) => server.close(resolve)));
   const url = `http://127.0.0.1:${server.address().port}/api/rsvp`;
-  const headers = { 'Content-Type': 'application/json', 'X-Vercel-Forwarded-For': '203.0.113.1' };
+  const headers = {
+    'Content-Type': 'application/json',
+    'X-Rsvp-Browser-Id': '00000000-0000-4000-8000-000000000001',
+    'X-Vercel-Forwarded-For': '203.0.113.1',
+  };
   const save = await fetch(url, {
     method: 'POST',
     headers,
@@ -171,6 +165,42 @@ test('Vercel adapter awaits Blob writes and supports bodies pre-parsed by the ru
   assert.equal((await save.json()).counts.attending, 1);
   const fresh = await fetch(url, { headers });
   assert.equal((await fresh.json()).attendance, 'attending');
+  const otherBrowser = { ...headers, 'X-Rsvp-Browser-Id': '00000000-0000-4000-8000-000000000002' };
+  const other = await fetch(url, {
+    method: 'POST',
+    headers: otherBrowser,
+    body: JSON.stringify({ attendance: 'attending' }),
+  });
+  assert.equal((await other.json()).counts.attending, 2);
+  const retry = await fetch(url, {
+    method: 'POST',
+    headers: { ...headers, 'X-Vercel-Forwarded-For': '198.51.100.8' },
+    body: JSON.stringify({ attendance: 'attending' }),
+  });
+  assert.equal((await retry.json()).counts.attending, 2);
+  const cold = createVercelRsvpHandler({
+    env: { BLOB_READ_WRITE_TOKEN: 'fake-test-token', VERCEL_ENV: 'production' },
+    client: blob.client,
+  });
+  const legacy = store(blob, 'wedding-invite/production');
+  await legacy.save('203.0.113.99', 'attending');
+  let result;
+  await cold(
+    {
+      url: '/api/rsvp',
+      method: 'GET',
+      headers: { 'x-rsvp-browser-id': headers['X-Rsvp-Browser-Id'] },
+    },
+    {
+      writeHead(status) {
+        assert.equal(status, 200);
+      },
+      end(body) {
+        result = JSON.parse(body);
+      },
+    },
+  );
+  assert.deepEqual(result, { counts: { attending: 3, declined: 0 }, attendance: 'attending' });
   const invalid = await fetch(url, {
     method: 'POST',
     headers,

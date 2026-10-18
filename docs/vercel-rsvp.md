@@ -7,7 +7,7 @@ Tidak diperlukan database atau kunci hash buatan sendiri.
 ## 1. Hubungkan Private Blob
 
 1. Buka project **wedding-invite** pada [dashboard Vercel](https://vercel.com/abdil1/wedding-invite).
-2. Buka tab **Storage**, pilih **Create Storage**, lalu **Blob**.
+2. Buka tab **Storage**, pilih **Create Database**, lalu **Blob**.
 3. Pilih akses **Private** dan beri nama, misalnya `wedding-rsvp`.
 4. Hubungkan store ke project tersebut. Aktifkan environment **Production**
    dan **Preview**.
@@ -48,8 +48,8 @@ selalu nol pada backend Blob dan dipertahankan untuk kompatibilitas client;
 halaman hanya menampilkan jumlah hadir.
 
 Klik **Saya akan hadir**. Setelah penyimpanan dikonfirmasi server, jumlah
-bertambah dan tombol terpilih. Refresh halaman: jumlah serta konfirmasi IP
-yang sama tetap ada. Klik ulang dari IP sama tidak menambah jumlah.
+bertambah dan tombol terpilih. Refresh halaman: jumlah serta konfirmasi browser
+yang sama tetap ada. Klik ulang dari browser yang sama tidak menambah jumlah.
 
 - **404:** deployment belum memuat `api/rsvp.js`, atau Anda membuka URL versi lama.
 - **503:** koneksi storage/environment project belum tersedia; periksa
@@ -63,10 +63,10 @@ yang sama tetap ada. Klik ulang dari IP sama tidak menambah jumlah.
 ## Cara penyimpanan dan pencegahan hitung ganda
 
 - Konfigurasi privat dibuat sekali di `wedding-invite/production/config.json`.
-- Setiap IP memiliki satu nama file HMAC pada folder `responses/`. IP mentah
-  tidak ditulis ke file. Rahasia hash hanya tersimpan di konfigurasi privat.
+- Setiap ID browser memiliki satu nama file HMAC pada folder `responses/`.
+  ID mentah tidak ditulis ke file. ID dibuat otomatis dan disimpan di localStorage. Rahasia hash hanya tersimpan di konfigurasi privat.
 - File konfirmasi dibuat dengan nama tetap dan `allowOverwrite: false`.
-  Permintaan bersamaan dari IP sama tetap menghasilkan satu file. IP berbeda
+  Permintaan bersamaan dari ID browser sama tetap menghasilkan satu file. ID browser berbeda
   menghasilkan file berbeda, sehingga tidak berebut memperbarui satu counter.
 - Jumlah dihitung dari semua halaman daftar file konfirmasi. Tidak ada satu
   angka counter bersama yang dapat tertimpa oleh request lain.
@@ -76,8 +76,16 @@ no-store`. File/key/URL Blob tidak dikirim ke pengunjung.
   dan redeploy, selama Blob store beserta filenya dipertahankan.
 - Jangan menghapus `config.json`, folder `responses`, atau Blob store. Unduh
   cadangan melalui dashboard untuk perlindungan dari penghapusan tidak sengaja.
-- Satu IP publik tidak selalu berarti satu orang: Wi-Fi bersama dapat berbagi
-  konfirmasi, dan perubahan IP dapat menghasilkan konfirmasi baru.
+- HP dan laptop di Wi-Fi yang sama dihitung terpisah. Perubahan IP tidak membuat
+  respons baru jika ID browser tetap sama.
+- ID berlaku per browser dan domain. Menghapus data situs, mode privat, browser
+  lain, atau domain lain dapat menghasilkan ID baru. Bagikan satu domain Production
+  yang tetap. Metode ini tidak menjamin satu orang hanya dihitung sekali.
+- Respons lama berbasis IP tetap masuk total, tetapi tidak dapat dipasangkan
+  otomatis ke ID browser baru. Pengunjung lama dapat mengonfirmasi lagi sekali.
+- API GET tanpa header ID hanya menampilkan total dengan attendance null. Situs
+  mengirim header X-Rsvp-Browser-Id untuk membaca status dan mengirim konfirmasi.
+  POST tanpa ID UUID v4 yang valid ditolak dengan 400.
 
 Production menggunakan prefix `wedding-invite/production`; Preview menggunakan
 `wedding-invite/preview` agar uji coba tidak menambah jumlah tamu Production.

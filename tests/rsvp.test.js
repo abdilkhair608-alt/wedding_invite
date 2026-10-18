@@ -5,7 +5,6 @@ import os from 'node:os';
 import path from 'node:path';
 import { test } from 'node:test';
 import { createRsvpStore } from '../server/rsvp-store.js';
-import { getClientIp, normalizeIp } from '../server/rsvp-api.js';
 import { createApp } from '../server/index.js';
 
 function fixture(t) {
@@ -17,8 +16,10 @@ function fixture(t) {
   return path.join(directory, 'rsvp.json');
 }
 
-async function startServer(t, filePath, trustedProxyIps = []) {
-  const server = createApp({ filePath, trustedProxyIps });
+const browserId = (n = 1) => `00000000-0000-4000-8000-${String(n).padStart(12, '0')}`;
+
+async function startServer(t, filePath) {
+  const server = createApp({ filePath });
   server.listen(0, '127.0.0.1');
   await once(server, 'listening');
   t.after(() => new Promise((resolve) => server.close(resolve)));
@@ -28,7 +29,7 @@ async function startServer(t, filePath, trustedProxyIps = []) {
 function post(url, attendance, headers = {}) {
   return fetch(`${url}/api/rsvp`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...headers },
+    headers: { 'Content-Type': 'application/json', 'X-Rsvp-Browser-Id': browserId(), ...headers },
     body: JSON.stringify({ attendance }),
   });
 }
@@ -74,30 +75,32 @@ test('unreadable primary and backup fail instead of silently resetting confirmat
   assert.equal(fs.readFileSync(file, 'utf8'), '{broken');
 });
 
-test('IP variants are normalized and untrusted forwarded headers cannot create fake visitors', () => {
-  assert.equal(normalizeIp('::ffff:192.0.2.1'), '192.0.2.1');
-  assert.equal(normalizeIp('::ffff:c000:201'), '192.0.2.1');
-  assert.equal(normalizeIp('2001:0DB8:0:0:0:0:0:1'), '2001:db8::1');
-  assert.equal(normalizeIp('not-an-ip'), null);
-  const request = {
-    socket: { remoteAddress: '127.0.0.1' },
-    headers: { 'x-forwarded-for': '198.51.100.1, 203.0.113.1' },
-  };
-  assert.equal(getClientIp(request), '127.0.0.1');
-  assert.equal(getClientIp(request, ['127.0.0.1']), '203.0.113.1');
+test('browser IDs are required for writes and invalid IDs are rejected', async (t) => {
+  const { url } = await startServer(t, fixture(t));
+  for (const id of ['', '203.0.113.1', 'not-an-id', 'a'.repeat(2048)]) {
+    assert.equal((await post(url, 'attending', { 'X-Rsvp-Browser-Id': id })).status, 400);
+  }
+  const missing = await fetch(`${url}/api/rsvp`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ attendance: 'attending' }),
+  });
+  assert.equal(missing.status, 400);
+  const snapshot = await (await fetch(`${url}/api/rsvp`)).json();
+  assert.deepEqual(snapshot, { counts: { attending: 0, declined: 0 }, attendance: null });
 });
 
-test('concurrent submissions keep all unique IPs and repeated clicks remain idempotent', async (t) => {
+test('browsers sharing one connection count separately and concurrent retries count once', async (t) => {
   const file = fixture(t);
-  const { url } = await startServer(t, file, ['127.0.0.1']);
+  const { url } = await startServer(t, file);
   const repeated = await Promise.all(
-    Array.from({ length: 12 }, () => post(url, 'attending', { 'X-Forwarded-For': '203.0.113.1' })),
+    Array.from({ length: 12 }, () => post(url, 'attending', { 'X-Rsvp-Browser-Id': browserId() })),
   );
   assert.ok(repeated.every((response) => response.status === 200));
   assert.equal((await (await fetch(`${url}/api/rsvp`)).json()).counts.attending, 1);
   const unique = await Promise.all(
     Array.from({ length: 12 }, (_, i) =>
-      post(url, 'attending', { 'X-Forwarded-For': `203.0.113.${i + 2}` }),
+      post(url, 'attending', { 'X-Rsvp-Browser-Id': browserId(i + 2) }),
     ),
   );
   assert.ok(unique.every((response) => response.status === 200));
@@ -107,13 +110,15 @@ test('concurrent submissions keep all unique IPs and repeated clicks remain idem
   assert.equal(createRsvpStore(file).read('203.0.113.1').counts.attending, 13);
 });
 
-test('a new HTTP server restores previous totals and the same IP response', async (t) => {
+test('a new HTTP server restores totals and recognizes the same browser', async (t) => {
   const file = fixture(t);
   const first = await startServer(t, file);
   assert.equal((await post(first.url, 'attending')).status, 200);
   await new Promise((resolve) => first.server.close(resolve));
   const second = await startServer(t, file);
-  const response = await fetch(`${second.url}/api/rsvp`);
+  const response = await fetch(`${second.url}/api/rsvp`, {
+    headers: { 'X-Rsvp-Browser-Id': browserId() },
+  });
   assert.equal(response.headers.get('cache-control'), 'no-store');
   assert.deepEqual(await response.json(), {
     counts: { attending: 1, declined: 0 },
@@ -125,12 +130,21 @@ test('API rejects invalid data, foreign origins, oversized payloads, and unsuppo
   const { url } = await startServer(t, fixture(t));
   assert.equal((await post(url, 'anything')).status, 400);
   assert.equal((await post(url, 'attending', { Origin: 'https://unrelated.example' })).status, 403);
-  assert.equal((await fetch(`${url}/api/rsvp`, { method: 'POST', body: 'attending' })).status, 415);
   assert.equal(
     (
       await fetch(`${url}/api/rsvp`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'X-Rsvp-Browser-Id': browserId() },
+        body: 'attending',
+      })
+    ).status,
+    415,
+  );
+  assert.equal(
+    (
+      await fetch(`${url}/api/rsvp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Rsvp-Browser-Id': browserId() },
         body: '{bad',
       })
     ).status,
@@ -140,7 +154,7 @@ test('API rejects invalid data, foreign origins, oversized payloads, and unsuppo
     (
       await fetch(`${url}/api/rsvp`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'X-Rsvp-Browser-Id': browserId() },
         body: 'x'.repeat(2048),
       })
     ).status,
@@ -155,9 +169,16 @@ test('API rejects invalid data, foreign origins, oversized payloads, and unsuppo
   });
 });
 
-test('HTTP requests cannot spoof IP without a configured trusted proxy', async (t) => {
-  const { url } = await startServer(t, fixture(t));
+test('changing IP does not change browser identity and legacy counts survive', async (t) => {
+  const file = fixture(t);
+  createRsvpStore(file).save('203.0.113.99', 'attending');
+  const { url } = await startServer(t, file);
   await post(url, 'attending', { 'X-Forwarded-For': '203.0.113.1' });
   await post(url, 'attending', { 'X-Forwarded-For': '203.0.113.2' });
-  assert.equal((await (await fetch(`${url}/api/rsvp`)).json()).counts.attending, 1);
+  const snapshot = await (
+    await fetch(`${url}/api/rsvp`, { headers: { 'X-Rsvp-Browser-Id': browserId() } })
+  ).json();
+  assert.deepEqual(snapshot, { counts: { attending: 2, declined: 0 }, attendance: 'attending' });
+  assert.equal(createRsvpStore(file).read('203.0.113.99').attendance, 'attending');
+  assert.equal(fs.readFileSync(file, 'utf8').includes(browserId()), false);
 });
