@@ -1,4 +1,6 @@
 const paths = {
+  envelope: 'M3 5h18v14H3zM3 6l9 7 9-7',
+  copy: 'M8 8h13v13H8zM16 8V3H3v13h5',
   arrow: 'M5 12h14m-6-6 6 6-6 6',
   pin: 'M20 10c0 6-8 11-8 11S4 16 4 10a8 8 0 1 1 16 0ZM15 10a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z',
   clock: 'M12 8v4l3 2M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0Z',

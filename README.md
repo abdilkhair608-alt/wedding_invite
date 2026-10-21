@@ -6,7 +6,25 @@ gambar lokal, hitung mundur resepsi, galeri yang dapat diperbesar, dan
 konfirmasi kehadiran dengan penyimpanan file JSON (tanpa database).
 Tailwind diproses saat build, sehingga tidak lagi menggunakan CDN JavaScript.
 
-## Menjalankan proyek
+## Undangan dengan nama tamu
+
+Buka `/?kelola=undangan` pada domain website, misalnya
+`https://ai-cici.vercel.app/?kelola=undangan`. Masukkan nama tamu, tekan
+**Buat tautan undangan**, lalu salin tautan/pesan atau pilih **Kirim via WhatsApp**.
+Untuk tamu berikutnya, ganti nama dan buat tautan lagi. Setiap tautan berdiri
+sendiri dan tetap berlaku meskipun nama pada pembuat tautan sudah diganti.
+
+Tautan tamu memakai parameter `?to=Nama+Tamu`. Sampul menampilkan nama tersebut
+dan tombol **Buka Undangan** untuk masuk ke halaman utama. Tanpa nama,
+sampul menampilkan **Tamu Undangan**. Nama ditampilkan sebagai teks React,
+bukan HTML. Sampul muncul kembali ketika halaman dimuat ulang.
+
+Pembuat tautan tidak menyimpan daftar tamu dan bukan halaman admin RSVP;
+halaman ini hanya membuat tautan dan pesan pengantar. RSVP tetap memakai
+penyimpanan serta ID browser yang sama. Ilustrasi sampul memakai aset taman
+lokal yang sudah ada; ganti aset jika ingin memakai foto mempelai.
+
+## Menjalankan di komputer
 
 Gunakan Node.js 22.12+; proyek ini diuji dengan Node.js 24.
 
