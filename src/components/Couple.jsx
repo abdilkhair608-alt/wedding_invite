@@ -28,7 +28,7 @@ export default function Couple() {
           </div>
           <p className="eyebrow justify-center mt-8">MEMPELAI PRIA</p>
           <h3>
-            Aidil Fajri<span>, A.Md</span>
+            Mis Aidil Fajri<span> A.Md</span>
           </h3>
           <p>
             Putra dari
