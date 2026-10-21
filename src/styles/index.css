@@ -814,14 +814,6 @@ h2 em {
 .event-card .button {
   margin-top: auto;
 }
-.event-blessing {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 19px;
-  font-style: italic;
-  color: #839174;
-  padding: 18px 0;
-  margin-top: auto;
-}
 .countdown-wrap {
   margin-top: 65px;
   text-align: center;

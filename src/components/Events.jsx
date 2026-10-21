@@ -44,7 +44,7 @@ export default function Events() {
                 <p>{event.address}</p>
               </div>
             </div>
-            {event.mapUrl ? (
+            {event.mapUrl && (
               <a
                 className="button button-dark"
                 href={event.mapUrl}
@@ -53,8 +53,6 @@ export default function Events() {
               >
                 Lihat peta lokasi <Icon name="arrow" />
               </a>
-            ) : (
-              <p className="event-blessing">Semoga menjadi awal yang penuh berkah.</p>
             )}
           </article>
         ))}
