@@ -1383,6 +1383,29 @@ h2 em {
   html {
     scroll-padding-top: 24px;
   }
+  .guest-builder {
+    padding-right: max(20px, env(safe-area-inset-right));
+    padding-left: max(20px, env(safe-area-inset-left));
+    padding-bottom: calc(40px + env(safe-area-inset-bottom));
+  }
+  .guest-builder-header {
+    padding-top: calc(25px + env(safe-area-inset-top));
+  }
+  .guest-builder input,
+  .guest-builder textarea {
+    font-size: 16px;
+  }
+  .guest-builder .button {
+    min-height: 48px;
+    font-size: 14px;
+  }
+  .guest-builder-actions > * {
+    flex: 1 1 180px;
+    min-width: 0;
+  }
+  .guest-builder-layout > * {
+    min-width: 0;
+  }
   .navbar-content {
     padding: calc(16px + env(safe-area-inset-top)) 20px 16px;
   }
@@ -1411,6 +1434,9 @@ h2 em {
   }
   .hero-date {
     margin: 24px 0 30px;
+  }
+  .hero-date time {
+    white-space: normal;
   }
   .hero-copy .button {
     width: min(100%, 300px);

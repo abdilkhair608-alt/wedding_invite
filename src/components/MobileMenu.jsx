@@ -11,7 +11,7 @@ export default function MobileMenu({ links, onClose }) {
     if (!closing) return;
 
     let active = true;
-    const animations = dialogRef.current.getAnimations();
+    const animations = dialogRef.current?.getAnimations?.() ?? [];
     Promise.allSettled(animations.map((animation) => animation.finished)).then(() => {
       if (active) onClose(destinationRef.current);
     });
