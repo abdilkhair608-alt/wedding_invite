@@ -118,8 +118,8 @@ src/
   main.jsx                 Entry React dan stylesheet
   App.jsx                  Susunan bagian halaman
   components/
-    Navbar.jsx             Navigasi desktop dan menu ponsel
-    MobileMenu.jsx         Menu modal dengan latar blur dan navigasi keyboard
+    Navbar.jsx             Navigasi desktop dan navbar bawah tetap di ponsel
+    MobileMenu.jsx         Komponen menu modal lama (tidak digunakan Navbar)
     Hero.jsx               Sampul undangan
     Quote.jsx              Kutipan
     Couple.jsx             Identitas mempelai
@@ -174,10 +174,11 @@ Catatan aset dan prompt ada di src/assets/README.md. Font Google memerlukan
 internet dan memiliki fallback lokal. Hitung mundur mengacu pada resepsi
 9 November 2026 pukul 10.00 WIB, dan berhenti pada nol setelah acara dimulai.
 Galeri mendukung tombol Escape, penguncian scroll, dan pemulihan fokus.
-Menu ponsel juga memakai dialog modal: halaman di belakangnya diburamkan,
-scroll dikunci, dan fokus keyboard tetap di menu. Menu tertutup ketika
-memilih tautan, menekan Escape/tombol X, mengetuk backdrop, atau beralih
-ke lebar desktop. Tampilan ponsel memakai kartu satu kolom, gambar galeri
+Navigasi ponsel berada tetap di bawah layar, dengan ikon dan label untuk
+Beranda, Mempelai, Acara, Konfirmasi, dan Galeri. Bagian aktif ditandai saat
+halaman di-scroll. Jarak bawah halaman menyisakan ruang untuk navbar dan
+safe area perangkat. Navbar ini baru muncul setelah sampul undangan dibuka.
+Tampilan ponsel memakai kartu satu kolom, gambar galeri
 yang lebih lapang, serta jarak aman untuk perangkat dengan notch.
 Animasi mengikuti preferensi reduced motion. Timer berhenti setelah acara
 dimulai. HTML dan simulasi RSVP lama telah dihapus; konfirmasi kini disimpan

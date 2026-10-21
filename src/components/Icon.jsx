@@ -1,4 +1,7 @@
 const paths = {
+  home: 'M3 10l9-7 9 7v11h-6v-7H9v7H3z',
+  calendar: 'M4 5h16v16H4zM8 3v4m8-4v4M4 10h16m-11 4h1m4 0h1m-6 3h1',
+  image: 'M3 4h18v16H3zM3 16l6-6 5 5 3-3 4 4M15 8h.01',
   envelope: 'M3 5h18v14H3zM3 6l9 7 9-7',
   copy: 'M8 8h13v13H8zM16 8V3H3v13h5',
   arrow: 'M5 12h14m-6-6 6 6-6 6',

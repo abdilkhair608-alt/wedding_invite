@@ -1,19 +1,40 @@
-import { useCallback, useState } from 'react';
-import MobileMenu from './MobileMenu.jsx';
+import { useEffect, useState } from 'react';
+import Icon from './Icon.jsx';
 
 const links = [
-  ['home', 'Beranda'],
-  ['couple', 'Mempelai'],
-  ['events', 'Acara'],
-  ['rsvp', 'Konfirmasi'],
-  ['gallery', 'Galeri'],
+  ['home', 'Beranda', 'home'],
+  ['couple', 'Mempelai', 'heart'],
+  ['events', 'Acara', 'calendar'],
+  ['rsvp', 'Konfirmasi', 'envelope'],
+  ['gallery', 'Galeri', 'image'],
 ];
 
 export default function Navbar() {
-  const [open, setOpen] = useState(false);
-  const closeMenu = useCallback((sectionId) => {
-    setOpen(false);
-    if (sectionId) window.location.hash = sectionId;
+  const [active, setActive] = useState('home');
+
+  useEffect(() => {
+    const sections = links.map(([id]) => document.getElementById(id)).filter(Boolean);
+    let frame = null;
+    function updateActive() {
+      frame = null;
+      const marker = window.innerHeight * 0.35;
+      let current = 'home';
+      for (const section of sections) {
+        if (section.getBoundingClientRect().top <= marker) current = section.id;
+      }
+      setActive(current);
+    }
+    function scheduleUpdate() {
+      if (frame === null) frame = window.requestAnimationFrame(updateActive);
+    }
+    updateActive();
+    window.addEventListener('scroll', scheduleUpdate, { passive: true });
+    window.addEventListener('resize', scheduleUpdate);
+    return () => {
+      window.removeEventListener('scroll', scheduleUpdate);
+      window.removeEventListener('resize', scheduleUpdate);
+      if (frame !== null) window.cancelAnimationFrame(frame);
+    };
   }, []);
 
   return (
@@ -32,33 +53,15 @@ export default function Navbar() {
             </a>
           ))}
         </div>
-        <button
-          type="button"
-          className="menu-button md:hidden"
-          aria-expanded={open}
-          aria-controls={open ? 'mobile-menu' : undefined}
-          aria-label={open ? 'Tutup navigasi' : 'Buka navigasi'}
-          onClick={(event) => {
-            event.currentTarget.focus({ preventScroll: true });
-            setOpen(true);
-          }}
-        >
-          <svg
-            className="burger-icon"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            aria-hidden="true"
-          >
-            <path className="burger-line" d="M4 6h16" />
-            <path className="burger-line" d="M4 12h16" />
-            <path className="burger-line" d="M4 18h16" />
-          </svg>
-        </button>
       </nav>
-      {open && <MobileMenu links={links} onClose={closeMenu} />}
+      <nav className="mobile-bottom-nav" aria-label="Navigasi ponsel">
+        {links.map(([id, title, icon]) => (
+          <a key={id} href={`#${id}`} aria-current={active === id ? 'location' : undefined}>
+            <Icon name={icon} />
+            <span>{title}</span>
+          </a>
+        ))}
+      </nav>
     </header>
   );
 }

@@ -36,7 +36,7 @@ function WeddingPage() {
   }, []);
 
   return (
-    <div ref={pageRef}>
+    <div ref={pageRef} className="wedding-page">
       <Navbar />
       <main ref={contentRef} tabIndex={-1} className="wedding-main">
         <Hero />
