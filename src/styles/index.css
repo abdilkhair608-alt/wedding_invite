@@ -603,6 +603,24 @@ h2 em {
   color: #596451;
   line-height: 1.9;
 }
+#couple,
+.gallery-section {
+  background: #faf9f5;
+  color: #2f402e;
+}
+#couple .eyebrow,
+.gallery-heading .eyebrow {
+  color: #4f6248;
+}
+#couple .section-heading h2,
+.gallery-heading h2 {
+  font-weight: 500;
+}
+#couple .section-heading h2 em,
+.gallery-heading h2 em {
+  color: #526747;
+  font-weight: 500;
+}
 .quote-section {
   background: #f0f1e9;
   color: #66795a;
@@ -673,23 +691,25 @@ h2 em {
   font-family: 'Cormorant Garamond', serif;
   font-size: 30px;
   margin: 12px 0;
+  color: #2f402e;
+  font-weight: 500;
 }
 .couple-person h3 > span {
   font-size: 20px;
 }
 .couple-person > p:not(.eyebrow) {
-  color: #7c8275;
+  color: #4e5b48;
   font-size: 16px;
   line-height: 1.9;
 }
 .couple-person strong {
-  font-weight: 500;
-  color: #53634b;
+  font-weight: 600;
+  color: #34472f;
 }
 .signature {
   display: block;
   font-family: 'Great Vibes', cursive;
-  color: #8d9a7e;
+  color: #526747;
   font-size: 35px;
   margin-top: 18px;
 }
@@ -860,7 +880,7 @@ h2 em {
 .gallery-heading > p {
   font-size: 16px;
   line-height: 1.9;
-  color: #838977;
+  color: #4e5b48;
 }
 .gallery-grid {
   display: grid;
@@ -1389,7 +1409,7 @@ h2 em {
   }
   .wedding-page {
     padding-bottom: calc(88px + env(safe-area-inset-bottom));
-    background: #354534;
+    background: #faf9f5;
   }
   .site-header {
     position: fixed;
@@ -1560,7 +1580,7 @@ h2 em {
     line-height: 1.3;
   }
   .couple-person > p:not(.eyebrow) {
-    color: #65705e;
+    color: #4e5b48;
     line-height: 1.85;
   }
   .events-grid {
