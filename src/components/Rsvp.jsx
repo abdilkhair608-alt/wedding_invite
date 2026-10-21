@@ -24,7 +24,7 @@ export default function Rsvp() {
             type="button"
             className="button button-dark"
             aria-pressed={confirmed}
-            disabled={loading || !data || saving || confirmed}
+            disabled={loading || saving || confirmed}
             onClick={() => respond('attending')}
           >
             <Icon name="heart" />

@@ -6,7 +6,8 @@ Tidak diperlukan database atau kunci hash buatan sendiri.
 
 ## 1. Hubungkan Private Blob
 
-1. Buka project **wedding-invite** pada [dashboard Vercel](https://vercel.com/abdil1/wedding-invite).
+1. Buka [dashboard Vercel](https://vercel.com/dashboard), lalu pilih project
+   yang memiliki domain undangan Anda (misalnya `ai-cici.vercel.app`).
 2. Buka tab **Storage**, pilih **Create Database**, lalu **Blob**.
 3. Pilih akses **Private** dan beri nama, misalnya `wedding-rsvp`.
 4. Hubungkan store ke project tersebut. Aktifkan environment **Production**
@@ -34,6 +35,27 @@ Panduan resmi: [Vercel Blob SDK — Getting started](https://vercel.com/docs/ver
 
 ## 3. Periksa endpoint dan tombol
 
+Pemeriksaan dari terminal (tidak mengirim konfirmasi tamu):
+
+```powershell
+npm.cmd run check:vercel -- https://ai-cici.vercel.app
+```
+
+Perintah akan gagal dengan petunjuk perbaikan jika API belum tersedia.
+Respons error versi terbaru menyertakan kode berikut:
+
+| Kode                          | Penyebab dan tindakan                                                                                                                        |
+| ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `RSVP_STORAGE_NOT_CONFIGURED` | Function tidak menerima kredensial Blob. Hubungkan Private Blob ke **project yang benar**, aktifkan Production, lalu redeploy.               |
+| `RSVP_CONFIGURATION_INVALID`  | Konfigurasi tidak valid. Kosongkan `RSVP_BLOB_PREFIX` jika belum pernah dipakai, atau gunakan prefix lama yang valid; periksa Function Logs. |
+| `RSVP_STORAGE_UNAVAILABLE`    | Blob tidak dapat dibaca/ditulis. Periksa token, akses Private, kuota, dan Function Logs; jangan hapus data.                                  |
+
+Deploy **source project dari folder utama** yang berisi `package.json`,
+`api/`, `server/`, dan `vercel.json`. Mengunggah folder `dist` saja hanya
+mengunggah halaman statis; API penyimpanan tidak ikut tersedia. Jangan memakai
+file lokal atau `/tmp` sebagai pengganti Blob di Vercel, karena data tidak
+bertahan secara andal antar Function/redeploy.
+
 Buka `https://DOMAIN-TERBARU/api/rsvp` dari browser. Jika siap, hasilnya berupa JSON:
 
 ```json
@@ -52,8 +74,9 @@ bertambah dan tombol terpilih. Refresh halaman: jumlah serta konfirmasi browser
 yang sama tetap ada. Klik ulang dari browser yang sama tidak menambah jumlah.
 
 - **404:** deployment belum memuat `api/rsvp.js`, atau Anda membuka URL versi lama.
-- **503:** koneksi storage/environment project belum tersedia; periksa
-  Function Logs lalu redeploy setelah menghubungkan Blob.
+- **503:** periksa kode error di atas dan Function Logs, kemudian redeploy
+  setelah memperbaiki koneksi storage/environment. Deployment lama mungkin
+  belum mengirim kode error.
 - **500:** periksa Function Logs untuk akses Blob, store yang tidak Private,
   atau gangguan storage. Jangan menghapus file konfigurasi untuk mencoba
   memperbaiki angka; file tersebut menyimpan identitas hash respons.

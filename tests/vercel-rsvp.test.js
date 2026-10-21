@@ -221,5 +221,65 @@ test('an unconnected Blob store returns 503 without creating a local counter', a
   assert.equal(response.headers.get('cache-control'), 'no-store');
   const result = await response.json();
   assert.equal(result.counts, undefined);
+  assert.equal(result.code, 'RSVP_STORAGE_NOT_CONFIGURED');
   assert.match(result.error, /belum tersedia/);
+});
+
+async function invoke(handler, url = '/api/rsvp') {
+  let result;
+  await handler(
+    { url, method: 'GET', headers: {} },
+    {
+      writeHead(status, headers) {
+        result = { status, headers };
+      },
+      end(body) {
+        result.body = JSON.parse(body);
+      },
+    },
+  );
+  return result;
+}
+
+test('Vercel reports invalid configuration separately without exposing credentials', async (t) => {
+  t.mock.method(console, 'error', () => {});
+  const result = await invoke(
+    createVercelRsvpHandler({
+      env: { BLOB_READ_WRITE_TOKEN: 'secret-test-token', RSVP_BLOB_PREFIX: '../invalid' },
+    }),
+  );
+  assert.equal(result.status, 503);
+  assert.equal(result.body.code, 'RSVP_CONFIGURATION_INVALID');
+  assert.ok(!JSON.stringify(result).includes('secret-test-token'));
+});
+
+test('Blob outages return retryable 503 and recover on the same warm function', async (t) => {
+  t.mock.method(console, 'error', () => {});
+  const blob = fakeBlob();
+  const handler = createVercelRsvpHandler({
+    env: { BLOB_READ_WRITE_TOKEN: 'fake-test-token' },
+    client: blob.client,
+  });
+  blob.failLists = true;
+  const failed = await invoke(handler);
+  assert.equal(failed.status, 503);
+  assert.equal(failed.body.code, 'RSVP_STORAGE_UNAVAILABLE');
+  assert.equal(failed.body.counts, undefined);
+  blob.failLists = false;
+  const recovered = await invoke(handler, '/api/rsvp/?refresh=1');
+  assert.equal(recovered.status, 200);
+  assert.equal(recovered.body.counts.attending, 0);
+});
+
+test('Vercel accepts OIDC storage credentials and forwards the connected store ID', async () => {
+  const blob = fakeBlob();
+  const result = await invoke(
+    createVercelRsvpHandler({
+      env: { BLOB_STORE_ID: 'store-test', VERCEL_OIDC_TOKEN: 'test-oidc-token' },
+      client: blob.client,
+    }),
+  );
+  assert.equal(result.status, 200);
+  assert.equal(blob.calls[0].options.storeId, 'store-test');
+  assert.equal(blob.calls[0].options.token, undefined);
 });

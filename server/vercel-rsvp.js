@@ -9,6 +9,7 @@ export function createVercelRsvpHandler({ env = process.env, client } = {}) {
         if (!env.BLOB_READ_WRITE_TOKEN && !(env.BLOB_STORE_ID && env.VERCEL_OIDC_TOKEN)) {
           console.error('RSVP: hubungkan Private Blob store ke project Vercel.');
           return sendJson(response, 503, {
+            code: 'RSVP_STORAGE_NOT_CONFIGURED',
             error: 'Konfirmasi kehadiran belum tersedia. Silakan coba lagi nanti.',
           });
         }
@@ -22,6 +23,7 @@ export function createVercelRsvpHandler({ env = process.env, client } = {}) {
         handler = createRsvpHandler({
           store,
           allowedAttendance: ['attending'],
+          storageErrorStatus: 503,
         });
       }
       return await handler(request, response, () =>
@@ -30,6 +32,7 @@ export function createVercelRsvpHandler({ env = process.env, client } = {}) {
     } catch (error) {
       console.error('RSVP configuration error:', error.message);
       return sendJson(response, 503, {
+        code: 'RSVP_CONFIGURATION_INVALID',
         error: 'Konfirmasi kehadiran belum tersedia. Silakan coba lagi nanti.',
       });
     }

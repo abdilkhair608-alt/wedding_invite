@@ -12,6 +12,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "node --test tests/*.test.js",
+    "check:vercel": "node server/check-vercel-rsvp.js",
     "check": "npm run lint && npm run format:check && npm test && npm run build"
   },
   "dependencies": {

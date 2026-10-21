@@ -4,7 +4,16 @@ import react from 'eslint-plugin-react';
 import reactHooks from 'eslint-plugin-react-hooks';
 
 export default [
-  { ignores: ['dist/**', 'node_modules/**', '.qa/**', '.npm-cache/**', '.data/**'] },
+  {
+    ignores: [
+      'dist/**',
+      'node_modules/**',
+      '.qa/**',
+      '.npm-cache/**',
+      '.data/**',
+      'undangan-rizki-salsabilla/**',
+    ],
+  },
   {
     files: ['**/*.{js,jsx}'],
     languageOptions: {

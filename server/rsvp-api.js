@@ -72,11 +72,12 @@ export function createRsvpHandler({
   filePath,
   store,
   allowedAttendance = ['attending', 'declined'],
+  storageErrorStatus = 500,
 }) {
   const storage = store ?? createRsvpStore(filePath);
 
   return async (request, response, next) => {
-    if (request.url.split('?')[0] !== '/api/rsvp') return next();
+    if (!/^\/api\/rsvp\/?$/.test(request.url.split('?')[0])) return next();
     try {
       const identity = getBrowserIdentity(request);
       if (request.method === 'GET') return sendJson(response, 200, await storage.read(identity));
@@ -103,7 +104,8 @@ export function createRsvpHandler({
       if (error instanceof RequestError)
         return sendJson(response, error.status, { error: error.message });
       console.error('RSVP storage error:', error.message);
-      return sendJson(response, 500, {
+      return sendJson(response, storageErrorStatus, {
+        code: 'RSVP_STORAGE_UNAVAILABLE',
         error: 'Konfirmasi belum dapat disimpan. Silakan coba lagi.',
       });
     }

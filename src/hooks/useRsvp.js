@@ -30,7 +30,11 @@ async function requestSnapshot(signal, attendance) {
       throw new RsvpApiError(
         typeof snapshot?.error === 'string'
           ? snapshot.error
-          : 'Konfirmasi kehadiran belum tersedia. Silakan coba lagi nanti.',
+          : response.status === 404
+            ? 'Layanan konfirmasi belum ditemukan. Silakan hubungi pengundang.'
+            : response.status === 401 || response.status === 403
+              ? 'Akses konfirmasi ditolak. Buka kembali tautan undangan dari pengundang.'
+              : 'Konfirmasi kehadiran belum tersedia. Silakan coba lagi nanti.',
       );
     }
     if (
