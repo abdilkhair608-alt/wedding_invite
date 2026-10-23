@@ -54,7 +54,7 @@ export default function Couple() {
           </div>
           <p className="eyebrow justify-center mt-8">MEMPELAI WANITA</p>
           <h3>
-            Aknesia Laurenza<span>, S.Pd</span>
+            Oknesia Laorenza<span>, S.Pd</span>
           </h3>
           <p>
             Putri dari
