@@ -4,6 +4,7 @@ import Quote from './components/Quote.jsx';
 import Couple from './components/Couple.jsx';
 import Journey from './components/Journey.jsx';
 import Events from './components/Events.jsx';
+import WeddingGift from './components/WeddingGift.jsx';
 import Rsvp from './components/Rsvp.jsx';
 import Gallery from './components/Gallery.jsx';
 import Footer from './components/Footer.jsx';
@@ -45,6 +46,7 @@ function WeddingPage() {
         <Couple />
         <Journey />
         <Events />
+        <WeddingGift />
         <Rsvp />
         <Gallery />
       </main>

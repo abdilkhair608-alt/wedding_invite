@@ -1,3 +1,5 @@
+export const groomName = 'Mis Aidil Fajri';
+
 const dateFormatter = new Intl.DateTimeFormat('id-ID', {
   timeZone: 'Asia/Jakarta',
   weekday: 'long',

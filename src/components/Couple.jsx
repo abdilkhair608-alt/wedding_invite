@@ -1,5 +1,6 @@
 import bouquet from '../assets/bridal-bouquet.jpg';
 import rings from '../assets/wedding-rings.jpg';
+import { groomName } from '../data/wedding.js';
 
 export default function Couple() {
   return (
@@ -28,7 +29,8 @@ export default function Couple() {
           </div>
           <p className="eyebrow justify-center mt-8">MEMPELAI PRIA</p>
           <h3>
-            Mis Aidil Fajri<span> A.Md</span>
+            {groomName}
+            <span> A.Md</span>
           </h3>
           <p>
             Putra dari

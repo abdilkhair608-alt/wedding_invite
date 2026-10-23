@@ -1,4 +1,5 @@
 const paths = {
+  gift: 'M3 8h18v4H3zM5 12v9h14v-9M12 8v13M12 8H8a3 3 0 1 1 3-3l1 3Zm0 0h4a3 3 0 1 0-3-3l-1 3Z',
   home: 'M3 10l9-7 9 7v11h-6v-7H9v7H3z',
   calendar: 'M4 5h16v16H4zM8 3v4m8-4v4M4 10h16m-11 4h1m4 0h1m-6 3h1',
   image: 'M3 4h18v16H3zM3 16l6-6 5 5 3-3 4 4M15 8h.01',
