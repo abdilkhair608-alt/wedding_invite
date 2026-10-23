@@ -2,6 +2,7 @@ import Navbar from './components/Navbar.jsx';
 import Hero from './components/Hero.jsx';
 import Quote from './components/Quote.jsx';
 import Couple from './components/Couple.jsx';
+import Journey from './components/Journey.jsx';
 import Events from './components/Events.jsx';
 import Rsvp from './components/Rsvp.jsx';
 import Gallery from './components/Gallery.jsx';
@@ -42,6 +43,7 @@ function WeddingPage() {
         <Hero />
         <Quote />
         <Couple />
+        <Journey />
         <Events />
         <Rsvp />
         <Gallery />
