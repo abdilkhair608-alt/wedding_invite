@@ -1653,18 +1653,35 @@ h2 em {
     justify-content: center;
   }
   .gallery-grid {
-    grid-template-columns: minmax(0, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     grid-template-rows: none;
-    gap: 16px;
+    gap: 12px;
   }
   .gallery-photo {
-    aspect-ratio: 4 / 3;
+    display: flex;
+    flex-direction: column;
     min-width: 0;
   }
   .gallery-wide {
-    grid-column: auto;
+    grid-column: 1 / -1;
     grid-row: auto;
-    aspect-ratio: 4 / 4.5;
+    aspect-ratio: 4 / 3;
+  }
+  .gallery-photo:not(.gallery-wide) img {
+    height: auto;
+    aspect-ratio: 1;
+  }
+  .gallery-photo:not(.gallery-wide) .gallery-overlay {
+    position: static;
+    flex: 1;
+    align-items: flex-start;
+    padding: 12px;
+    color: #394b3b;
+    background: #edf0e7;
+  }
+  .gallery-photo:not(.gallery-wide) .gallery-overlay > span {
+    font-size: 18px;
+    line-height: 1.4;
   }
   .gallery-overlay {
     padding: 40px 18px 18px;
