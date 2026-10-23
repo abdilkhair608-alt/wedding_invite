@@ -22,20 +22,38 @@ const chapters = [
 export default function Journey() {
   return (
     <section className="journey-section section-space" aria-labelledby="journey-title">
+      <div className="journey-decoration journey-decoration-top" aria-hidden="true">
+        <Icon name="leaf" />
+      </div>
+      <div className="journey-decoration journey-decoration-bottom" aria-hidden="true">
+        <Icon name="leaf" />
+      </div>
       <div className="journey-content">
-        <h2 id="journey-title" className="fade-in-section">
-          Our <em>Journey</em>
-        </h2>
-        {chapters.map((chapter) => (
-          <article className="journey-chapter fade-in-section" key={chapter.title}>
-            <h3>{chapter.title}</h3>
-            <p className="journey-period">
-              {chapter.period} — {chapter.title}
-            </p>
-            <p className="journey-story">{chapter.story}</p>
-          </article>
-        ))}
+        <header className="journey-heading fade-in-section">
+          <p className="eyebrow justify-center">CERITA PERJALANAN KAMI</p>
+          <h2 id="journey-title">
+            Our <em>Journey</em>
+          </h2>
+          <span className="fine-line" aria-hidden="true" />
+        </header>
+        <ol className="journey-timeline">
+          {chapters.map((chapter, index) => (
+            <li className="journey-chapter fade-in-section" key={chapter.title}>
+              <span className="journey-step" aria-hidden="true">
+                {String(index + 1).padStart(2, '0')}
+              </span>
+              <article className="journey-card">
+                <header>
+                  <p className="journey-period">{chapter.period}</p>
+                  <h3>{chapter.title}</h3>
+                </header>
+                <p className="journey-story">{chapter.story}</p>
+              </article>
+            </li>
+          ))}
+        </ol>
       </div>
     </section>
   );
 }
+import Icon from './Icon.jsx';
